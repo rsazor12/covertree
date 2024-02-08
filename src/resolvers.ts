@@ -1,39 +1,27 @@
-// export const resolvers = {
-//     Query: {
-//         hello: () => 'Hello, world!',
-//     },
-// };
-
-// src/resolvers.ts
 import { ApolloError } from 'apollo-server-errors';
 import Employee from './models/Employee';
 
 export const resolvers = {
     Query: {
-        // Query all employees with optional filters: title, department, and salary range
-        employees: async (_: any, { title, department, salaryRange, sortBy, sortOrder }: any) => {
+        employees: async (_: any, { title, department, salaryRange, sortParams }: any) => {
             let filter = {};
             if (title) filter = { ...filter, title };
             if (department) filter = { ...filter, department };
             if (salaryRange && salaryRange.length === 2) {
                 filter = { ...filter, salary: { $gte: salaryRange[0], $lte: salaryRange[1] } };
             }
+
+            let sortOptions = {};
+            if (sortParams) {
+                sortParams.forEach((param: { field: string | number; order: string; }) => {
+                    let order = param.order.toLowerCase() === 'asc' ? 1 : -1;
+                    sortOptions = { ...sortOptions, ...{ [param.field]: order } };
+                });
+            }
             try {
-                // Default sorting criteria if none specified
-                let sortCriteria = {};
-
-                if (sortBy && sortOrder) {
-                    // Convert sortOrder to 1 (ascending) or -1 (descending)
-                    const order = sortOrder.toUpperCase() === 'ASC' ? 1 : -1;
-                    sortCriteria = { [sortBy]: order };
-                }
-                return await Employee.find(filter).sort(sortCriteria);
+                return (await Employee.find(filter).sort(sortOptions));
             } catch (error) {
-                if (error instanceof Error) { // TODO - change this
-                    throw new ApolloError('Failed to query employees: ' + error.message);
-                }
-
-                throw new ApolloError('Failed to query employees');
+                throw new ApolloError('Failed to query employees ' + error);
             }
         },
 
@@ -42,11 +30,7 @@ export const resolvers = {
             try {
                 return await Employee.findById(id);
             } catch (error) {
-                if (error instanceof Error) {
-                    throw new ApolloError('Failed to find employee: ' + error.message);
-                }
-
-                throw new ApolloError('Failed to find employee');
+                throw new ApolloError('Failed to find employee ' + error);
             }
         },
     },
@@ -57,11 +41,7 @@ export const resolvers = {
                 const newEmployee = new Employee(employeeData);
                 return await newEmployee.save();
             } catch (error) {
-                if (error instanceof Error) {
-                    throw new ApolloError('Failed to add new employee: ' + error.message);
-                }
-
-                throw new ApolloError('Failed to add new employee');
+                throw new ApolloError('Failed to add new employee ' + error);
             }
         },
 
@@ -70,11 +50,7 @@ export const resolvers = {
             try {
                 return await Employee.findByIdAndUpdate(id, updateData, { new: true });
             } catch (error) {
-                if (error instanceof Error) {
-                    throw new ApolloError('Failed to update employee: ' + error.message);
-                }
-
-                throw new ApolloError('Failed to update employee');
+                throw new ApolloError('Failed to update employee ' + error);
             }
         },
 
@@ -84,11 +60,7 @@ export const resolvers = {
                 await Employee.findByIdAndDelete(id);
                 return "Employee deleted successfully";
             } catch (error) {
-                if (error instanceof Error) {
-                    throw new ApolloError('Failed to delete employee: ' + error.message);
-                }
-
-                throw new ApolloError('Failed to delete employee');
+                throw new ApolloError('Failed to delete employee ' + error);
             }
         },
     },

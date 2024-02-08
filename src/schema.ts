@@ -1,9 +1,6 @@
 import { gql } from 'apollo-server';
 
 export const typeDefs = gql`
-#   type Query {
-#     hello: String
-#   }
 type Employee {
   id: ID!
   firstName: String!
@@ -15,8 +12,13 @@ type Employee {
   department: String!
 }
 
+input SortInput {
+  field: String!
+  order: String! # ASC or DESC
+}
+
 type Query {
-  employees(title: String, department: String, salaryRange: [Float], sortBy: String, sortOrder: String): [Employee]
+  employees(title: String, department: String, salaryRange: [Float], sortParams: [SortInput]): [Employee]
   employee(id: ID!): Employee
 }
 
