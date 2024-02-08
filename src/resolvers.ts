@@ -11,7 +11,7 @@ import Employee from './models/Employee';
 export const resolvers = {
     Query: {
         // Query all employees with optional filters: title, department, and salary range
-        employees: async (_: any, { title, department, salaryRange }: any) => {
+        employees: async (_: any, { title, department, salaryRange, sortBy, sortOrder }: any) => {
             let filter = {};
             if (title) filter = { ...filter, title };
             if (department) filter = { ...filter, department };
@@ -19,7 +19,15 @@ export const resolvers = {
                 filter = { ...filter, salary: { $gte: salaryRange[0], $lte: salaryRange[1] } };
             }
             try {
-                return await Employee.find(filter);
+                // Default sorting criteria if none specified
+                let sortCriteria = {};
+
+                if (sortBy && sortOrder) {
+                    // Convert sortOrder to 1 (ascending) or -1 (descending)
+                    const order = sortOrder.toUpperCase() === 'ASC' ? 1 : -1;
+                    sortCriteria = { [sortBy]: order };
+                }
+                return await Employee.find(filter).sort(sortCriteria);
             } catch (error) {
                 if (error instanceof Error) { // TODO - change this
                     throw new ApolloError('Failed to query employees: ' + error.message);

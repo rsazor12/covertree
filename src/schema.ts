@@ -16,7 +16,7 @@ type Employee {
 }
 
 type Query {
-  employees(title: String, department: String, salaryRange: [Float]): [Employee]
+  employees(title: String, department: String, salaryRange: [Float], sortBy: String, sortOrder: String): [Employee]
   employee(id: ID!): Employee
 }
 
